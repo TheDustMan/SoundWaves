@@ -1,0 +1,2 @@
+sed -i '' 's/var path = require('\''path.*$/var path = require('\''\.\/\.\.\/\.\.\/path\/path\.js'\'')/' ../node_modules/grunt-ssh-deploy/tasks/ssh_deploy.js
+sed -i '' 's/var util = require('\''util.*$/var util = require('\''\.\/\.\.\/util\/util\.js'\'')/' ../node_modules/path/path.js
