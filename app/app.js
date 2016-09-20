@@ -1,9 +1,25 @@
-// ./my-project/app.js
-console.log('Welcome to my application');
+var sound = require('./sound.js');
+var graphics = require('./time_graphics.js');
 
-// require the local module
-var squareNumbers = require('./util/square-numbers');
+window.onload = function()
+{
+    window.addEventListener('onkeydown', keyDownEvent);
+    window.addEventListener('onkeydown', keyUpEvent);
 
-var input = [1,2,3,4];
-console.log('Input is:', input);
-console.log('Squared is:', squareNumbers(input));
+    graphics.initRenderer();
+    document.body.appendChild(graphics.getRenderer().domElement);
+
+    sound.play();
+    graphics.load();
+    graphics.startRender(60);
+};
+
+function keyDownEvent(e)
+{
+    console.log("keydown:" + e.which);
+}
+
+function keyUpEvent(e)
+{
+    console.log("keyup:" + e.which);
+}
