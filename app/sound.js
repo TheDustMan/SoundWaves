@@ -7,20 +7,25 @@ var Sounds = (function()
 
     function SineWave(frequency, amplitude)
     {
+        this._load = _load;
+
         this._frequency = frequency;
         this._amplitude = amplitude;
+        this._startTime = 0;
 
         // Stereo
         this._channels = 2;
         this._frameCountMultiplier = 1.0;
+
+        this._load();
+    }
+
+    /* SineWave Private Member Functions */
+    var _load = function()
+    {
         this._audioBuffer = _audioCtx.createBuffer(this._channels,
                                                    _audioCtx.sampleRate * this._frameCountMultiplier,
                                                    _audioCtx.sampleRate);
-    }
-
-    SineWave.prototype.constructor = SineWave;
-    SineWave.prototype.play = function()
-    {
         // Fill the buffer with white noise;
         //just random values between -1.0 and 1.0
         for (var channel = 0; channel < this._channels; channel++) {
@@ -32,7 +37,11 @@ var Sounds = (function()
                 nowBuffering[i] = this._amplitude * Math.sin(this._frequency * i);//Math.random() * 2 - 1;
             }
         }
+    };
 
+    SineWave.prototype.constructor = SineWave;
+    SineWave.prototype.play = function()
+    {
         // Get an AudioBufferSourceNode.
         // This is the AudioNode to use when we want to play an AudioBuffer
         var source = _audioCtx.createBufferSource();
@@ -42,11 +51,25 @@ var Sounds = (function()
         // destination so we can hear the sound
         source.connect(_audioCtx.destination);
         // start the source playing
+        this._startTime = _audioCtx.currentTime;
+        console.log(this._isPlaying);
         source.start();
+        source.onended = function()
+        {
+            console.log('Resetting start time');
+            this._startTime = 0;
+        };
     };
     SineWave.prototype.getAudioBuffer = function()
     {
         return this._audioBuffer;
+    };
+    SineWave.prototype.getCurrentTime = function()
+    {
+        if (_audioCtx.currentTime - this._startTime > this._audioBuffer.duration) {
+            return 0;
+        }
+        return _audioCtx.currentTime - this._startTime;
     };
 
     return {

@@ -14,6 +14,7 @@ var Visuals = (function()
 
     var _frameCount = 0;
     var _fpsInterval, _startTime, _now, _then, _elapsed;
+    var _updateableWidgets = [];
 
     var initialize = function()
     {
@@ -55,6 +56,9 @@ var Visuals = (function()
             _camera.position.x += _cameraXSpeed;
             _camera.position.y += _cameraYSpeed;
             _camera.position.z += _cameraZoomSpeed;
+            for (var i = 0; i < _updateableWidgets.length; ++i) {
+                _updateableWidgets[i].update();
+            }
             _renderer.render(_scene, _camera);
         }
     };
@@ -81,22 +85,10 @@ var Visuals = (function()
         _scene.add( dot );
     };
 
-    var loadSoundWave = function(soundWave)
+    var loadWidget = function(widget)
     {
-        var duration = soundWave.getAudioBuffer().duration;
-        var buffer = soundWave.getAudioBuffer().getChannelData(0);
-        console.log("Duration: " + duration);
-        console.log("Buffer: " + buffer.length);
-
-        var dotGeometry = new THREE.Geometry();
-        var width = 512;
-        var distanceBetween = Math.floor(buffer.length / width);
-        for (var i = 0; i < width; ++i) {
-            dotGeometry.vertices.push(new THREE.Vector3(i, -10 + buffer[i * distanceBetween], 0));
-        }
-        var dotMaterial = new THREE.PointsMaterial({ size: 1, sizeAttenuation: false });
-        var dot = new THREE.Points(dotGeometry, dotMaterial);
-        _scene.add(dot);
+        _updateableWidgets.push(widget);
+        _scene.add(widget.getWidget());
     };
 
     var setCameraZoomSpeed = function(zoomSpeed)
@@ -119,7 +111,7 @@ var Visuals = (function()
         getRenderer: getRenderer,
         startRender: startRender,
         load: load,
-        loadSoundWave: loadSoundWave,
+        loadWidget: loadWidget,
         setCameraZoomSpeed: setCameraZoomSpeed,
         setCameraXSpeed: setCameraXSpeed,
         setCameraYSpeed: setCameraYSpeed,
