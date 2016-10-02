@@ -1,6 +1,6 @@
 var Sounds = require('./sound.js');
 var Visuals = require('./visuals.js');
-var Widgets = require('./wave.js');
+var Widgets = require('./widgets.js');
 
 var widget;
 window.onload = function()
@@ -13,9 +13,30 @@ window.onload = function()
 
     var sineWave440 = new Sounds.SineWave(440, 1);
     var sineWave220 = new Sounds.SineWave(220, 1);
-    widget = new Widgets.WaveWidget(0, -20, 0, 512, 10);
+
+    /*
+    var ffAudio = new Sounds.AudioDataWave('assets/sounds/Final_Fantasy.ogg');
+    ffAudio.load().then(function() {
+        console.log('Audio loaded, playing!');
+        ffAudio.play();
+        var ffAudioWidget = new Widgets.AudioBufferWidget(ffAudio, 0, -40, 0, 512, 10);
+        Visuals.loadWidget(ffAudioWidget);
+    });
+    */
+    var narAudio = new Sounds.AudioDataWave('assets/sounds/north_african_ritual.mp3');
+    narAudio.load().then(function() {
+        console.log('Audio loaded, playing!');
+        narAudio.play();
+        var narAudioWidget = new Widgets.AudioBufferWidget(narAudio, 0, -40, 0, 512, 10);
+        Visuals.loadWidget(narAudioWidget);
+    });
+
+    widget = new Widgets.AudioBufferWidget(sineWave220, 0, -20, 0, 512, 10);
     sineWave440.play();
     sineWave220.play();
+
+    var analyzerWidget = new Widgets.AnalyzerWidget(Sounds.getAudioAnalyzer(), 0, -80, 0, 512, 40);
+    Visuals.loadWidget(analyzerWidget);
 
     Visuals.load();
     Visuals.loadWidget(widget);

@@ -59,6 +59,7 @@ var Visuals = (function()
             for (var i = 0; i < _updateableWidgets.length; ++i) {
                 _updateableWidgets[i].update();
             }
+
             _renderer.render(_scene, _camera);
         }
     };

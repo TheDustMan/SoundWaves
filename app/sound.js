@@ -4,6 +4,17 @@ var Sounds = (function()
 
     var AudioContextCtor = window.AudioContext || window.webkitAudioContext;
     var _audioCtx = new AudioContextCtor();
+    var _audioAnalyzer = _audioCtx.createAnalyser();
+
+    var getAudioContext = function()
+    {
+        return _audioCtx;
+    };
+
+    var getAudioAnalyzer = function()
+    {
+        return _audioAnalyzer;
+    };
 
     function SineWave(frequency, amplitude)
     {
@@ -50,9 +61,9 @@ var Sounds = (function()
         // connect the AudioBufferSourceNode to the
         // destination so we can hear the sound
         source.connect(_audioCtx.destination);
+        source.connect(_audioAnalyzer);
         // start the source playing
         this._startTime = _audioCtx.currentTime;
-        console.log(this._isPlaying);
         source.start();
         source.onended = function()
         {
@@ -72,8 +83,71 @@ var Sounds = (function()
         return _audioCtx.currentTime - this._startTime;
     };
 
+    function AudioDataWave(audioAssetPath)
+    {
+        this._audioBuffer = null;
+        this._audioAssetPath = audioAssetPath;
+        this._startTime = 0;
+    }
+    AudioDataWave.prototype.constructor = AudioDataWave;
+    AudioDataWave.prototype.getAudioBuffer = function()
+    {
+        return this._audioBuffer;
+    };
+    AudioDataWave.prototype.load = function()
+    {
+        var classThis = this;
+        return new Promise(
+            function(resolve, reject) {
+                var request = new XMLHttpRequest();
+                request.open('GET', classThis._audioAssetPath, true);
+                request.responseType = 'arraybuffer';
+                request.onload = function() {
+                    var audioData = request.response;
+
+                    _audioCtx.decodeAudioData(audioData).then(
+                        function(decodedData) {
+                            classThis._audioBuffer = decodedData;
+                            resolve();
+                        }
+                    ).catch(
+                        function(reason) {
+                            reject(reason);
+                        }
+                    );
+                };
+                request.send();
+            }
+        );
+    };
+    AudioDataWave.prototype.getCurrentTime = function()
+    {
+        if (_audioCtx.currentTime - this._startTime > this._audioBuffer.duration) {
+            return 0;
+        }
+        return _audioCtx.currentTime - this._startTime;
+    };
+    AudioDataWave.prototype.play = function()
+    {
+        var source = _audioCtx.createBufferSource();
+        source.buffer = this._audioBuffer;
+        source.connect(_audioCtx.destination);
+        source.connect(_audioAnalyzer);
+        //source.loop = true;
+        this._startTime = _audioCtx.currentTime;
+        source.start();
+        source.onended = function()
+        {
+            console.log('Resetting start time');
+            this._startTime = 0;
+        };
+    };
+
     return {
-        SineWave: SineWave
+        SineWave: SineWave,
+        AudioDataWave: AudioDataWave,
+        getAudioContext: getAudioContext,
+        getAudioAnalyzer: getAudioAnalyzer
     };
 })();
 
