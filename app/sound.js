@@ -43,6 +43,7 @@ var Sounds = (function()
             this._source.connect(this._audioAnalyzer);
             // start the source playing
             this._startTime = _audioCtx.currentTime;
+            this._source.loop = true;
             this._source.start();
             this._source.onended = function()
             {

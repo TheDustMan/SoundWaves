@@ -14,8 +14,12 @@ window.onload = function()
     var gui = new Dat.GUI();
     var sineWave440 = new Sounds.SineWave(440, 1);
     var sineWave220 = new Sounds.SineWave(220, 1);
+    /*
     //sineWave440.play();
-    //sineWave220.play();
+    sineWave220.play();
+    var sine220AnalyzerWidget = new Widgets.AnalyzerWidget(sineWave220.getAudioAnalyzer(), 0, -60, 0, 512, 40);
+    Visuals.loadWidget(sine220AnalyzerWidget);
+    */
 
     /*
     var ffAudio = new Sounds.AudioDataWave('assets/sounds/Final_Fantasy.ogg');
@@ -25,6 +29,7 @@ window.onload = function()
         Visuals.loadWidget(ffAudioWidget);
     });
     */
+
     var sfAudio = new Sounds.AudioDataWave('assets/sounds/super_freak.mp3');
     sfAudio.load().then(function() {
         var sfFolder = gui.addFolder('super_freak.mp3');
@@ -32,9 +37,10 @@ window.onload = function()
         sfFolder.add(sfAudio, 'pause');
         sfFolder.add(sfAudio, 'stop');
         sfFolder.open();
-        var sfAnalyzerWidget = new Widgets.AnalyzerWidget(sfAudio.getAudioAnalyzer(), 0, -200, 0, 512, 40);
+        var sfAnalyzerWidget = new Widgets.AnalyzerWidget(sfAudio.getAudioAnalyzer(), 0, -100, 0, 512, 40, 50);
         Visuals.loadWidget(sfAnalyzerWidget);
     });
+    /*
     var poAudio = new Sounds.AudioDataWave('assets/sounds/passing_out.mp3');
     poAudio.load().then(function() {
         //poAudio.play();
@@ -43,9 +49,10 @@ window.onload = function()
         poFolder.add(poAudio, 'pause');
         poFolder.add(poAudio, 'stop');
         poFolder.open();
-        var poAnalyzerWidget = new Widgets.AnalyzerWidget(poAudio.getAudioAnalyzer(), 0, -120, 0, 512, 40);
+        var poAnalyzerWidget = new Widgets.AnalyzerWidget(poAudio.getAudioAnalyzer(), 0, -100, 0, 512, 40, 1);
         Visuals.loadWidget(poAnalyzerWidget);
     });
+
     var narAudio = new Sounds.AudioDataWave('assets/sounds/north_african_ritual.mp3');
     narAudio.load().then(function() {
         var narFolder = gui.addFolder('north_african_ritual.mp3');
@@ -53,9 +60,10 @@ window.onload = function()
         narFolder.add(narAudio, 'pause');
         narFolder.add(narAudio, 'stop');
         narFolder.open();
-        var narAnalyzerWidget = new Widgets.AnalyzerWidget(narAudio.getAudioAnalyzer(), 0, -80, 0, 512, 40);
+        var narAnalyzerWidget = new Widgets.AnalyzerWidget(narAudio.getAudioAnalyzer(), 0, -200, 0, 512, 40, 100);
         Visuals.loadWidget(narAnalyzerWidget);
     });
+
     var edgyAudio = new Sounds.AudioDataWave('assets/sounds/club_edgy.mp3');
     edgyAudio.load().then(function() {
         var edgyFolder = gui.addFolder('club_edgy.mp3');
@@ -63,10 +71,10 @@ window.onload = function()
         edgyFolder.add(edgyAudio, 'pause');
         edgyFolder.add(edgyAudio, 'stop');
         edgyFolder.open();
-        var edgyAnalyzerWidget = new Widgets.AnalyzerWidget(edgyAudio.getAudioAnalyzer(), 0, -160, 0, 512, 40);
+        var edgyAnalyzerWidget = new Widgets.AnalyzerWidget(edgyAudio.getAudioAnalyzer(), 0, -400, 0, 512, 40, 40);
         Visuals.loadWidget(edgyAnalyzerWidget);
     });
-
+    */
     var widget = new Widgets.AudioBufferWidget(sineWave220, 0, -20, 0, 512, 10);
 
     Visuals.load();
