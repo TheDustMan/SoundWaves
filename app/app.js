@@ -3,6 +3,40 @@ var Visuals = require('./visuals.js');
 var Widgets = require('./widgets.js');
 var Dat = require('dat-gui');
 
+function AnalyzerWidgetController(gui, analyzerWidget)
+{
+    this.offsetX = 0;
+    this.offsetY = 0;
+    this.offsetZ = 0;
+    this.depth = 1;
+
+    var widgetFolder = gui.addFolder('WidgetName');
+    var depthControl = widgetFolder.add(this, 'depth', 1, 30).step(1);
+    var offsetXControl = widgetFolder.add(this, 'offsetX', -20, 20);
+    var offsetYControl = widgetFolder.add(this, 'offsetY', -20, 20);
+    var offsetZControl = widgetFolder.add(this, 'offsetZ', 0, 50);
+    widgetFolder.open();
+
+    depthControl.onChange(function(depth)
+    {
+        analyzerWidget.setDepth(depth);
+    });
+    offsetXControl.onChange(function(offsetX)
+    {
+        analyzerWidget.setOffsetX(offsetX);
+    });
+    offsetYControl.onChange(function(offsetY)
+    {
+        analyzerWidget.setOffsetY(offsetY);
+    });
+    offsetZControl.onChange(function(offsetZ)
+    {
+        analyzerWidget.setOffsetZ(offsetZ);
+    });
+}
+AnalyzerWidgetController.prototype.constructor = AnalyzerWidgetController;
+
+
 window.onload = function()
 {
     window.addEventListener('keydown', keyDownEvent);
@@ -10,16 +44,25 @@ window.onload = function()
 
     Visuals.initialize();
     document.body.appendChild(Visuals.getRenderer().domElement);
+    document.body.appendChild(Visuals.getStats().domElement);
 
     var gui = new Dat.GUI();
-    var sineWave440 = new Sounds.SineWave(440, 1);
+
+    //var sineWave440 = new Sounds.SineWave(440, 1);
     var sineWave220 = new Sounds.SineWave(220, 1);
     /*
     //sineWave440.play();
     sineWave220.play();
-    var sine220AnalyzerWidget = new Widgets.AnalyzerWidget(sineWave220.getAudioAnalyzer(), 0, -60, 0, 512, 40);
+    var sine220AnalyzerWidget = new Widgets.AnalyzerWidget(sineWave220.getAudioAnalyzer(), 0, -60, 0, 512, 40, 2);
+    var sine220Controller = new AnalyzerWidgetController(gui, sine220AnalyzerWidget);
     Visuals.loadWidget(sine220AnalyzerWidget);
+    var sineFolder = gui.addFolder('sine220');
+    sineFolder.add(sineWave220, 'play');
+    sineFolder.add(sineWave220, 'pause');
+    sineFolder.add(sineWave220, 'stop');
+    sineFolder.open();
     */
+
 
     /*
     var ffAudio = new Sounds.AudioDataWave('assets/sounds/Final_Fantasy.ogg');
@@ -37,9 +80,11 @@ window.onload = function()
         sfFolder.add(sfAudio, 'pause');
         sfFolder.add(sfAudio, 'stop');
         sfFolder.open();
-        var sfAnalyzerWidget = new Widgets.AnalyzerWidget(sfAudio.getAudioAnalyzer(), 0, -100, 0, 512, 40, 50);
+        var sfAnalyzerWidget = new Widgets.AnalyzerWidget(sfAudio.getAudioAnalyzer(), 0, -100, 0, 512, 40, 1);
+        var sfController = new AnalyzerWidgetController(gui, sfAnalyzerWidget);
         Visuals.loadWidget(sfAnalyzerWidget);
     });
+
     /*
     var poAudio = new Sounds.AudioDataWave('assets/sounds/passing_out.mp3');
     poAudio.load().then(function() {

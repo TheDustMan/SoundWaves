@@ -99,8 +99,12 @@ var Widgets = (function()
         this._graphGeometry = new THREE.Geometry();
         this._graphGeometry.dynamic = true;
         var yOffset = this._position.y + (this._height / 2);
+
+        // This creates a vector for each vertex that will be re-used during the
+        // call to updateGeometry
         for (var i = 0; i < this._dataArray.length; ++i) {
-            this._graphGeometry.vertices.push(new THREE.Vector3(this._position.x + i, yOffset, this._position.z));
+            var translatedY = (this._height / 2) * (((this._dataArray[i] * 2) / 255) - 1);
+            this._graphGeometry.vertices.push(new THREE.Vector3(this._position.x + i, yOffset + translatedY, this._position.z));
             this._graphGeometry.colors[i] = new THREE.Color(0xffffff);
         }
         var lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff, opacity: 1.0, vertexColors: THREE.VertexColors});
@@ -140,12 +144,13 @@ var Widgets = (function()
     {
         Widget.call(this, x, y, z, width, height);
         this._depth = depth;
+        this._offset = new THREE.Vector3(0, 0, 0);
         this._graphList = new BUCKETS.LinkedList();
         this._analyzer = analyzer;
         this._analyzer.fftSize = width * 2;
 
         // When the depth is one, we just create a single node and continuously update it
-        // instea dof mainting the list of them
+        // instead of mainting the list of them
         if (this._depth == 1) {
             this._graphList.add(new AnalyzerGraphNode(new Uint8Array(this._analyzer.frequencyBinCount), new THREE.Vector3(x, y ,z), width, height), 0);
             var classThis = this;
@@ -158,22 +163,22 @@ var Widgets = (function()
     AnalyzerWidget.prototype.constructor = AnalyzerWidget;
     AnalyzerWidget.prototype.update = function()
     {
+        var self = this;
         if (this._depth == 1) {
             // When only showing one graph node, don't bother adding and removing
             // from the list, just update the one
-            var classThis = this;
             this._graphList.forEach(function(graphNode) {
-                classThis._analyzer.getByteTimeDomainData(graphNode.getDataArray());
+                self._analyzer.getByteTimeDomainData(graphNode.getDataArray());
                 graphNode.updateGeometry(null);
             });
         } else {
             // Move all current nodes by an offsetVector
-            var yOffset = 0;
-            var zOffset = 0;
+            var offset = new THREE.Vector3(0, 0, 0);
             this._graphList.forEach(function(graphNode) {
-                yOffset -= 5;
-                zOffset += 10;
-                graphNode.updateGeometry(new THREE.Vector3(0, yOffset, zOffset));
+                graphNode.updateGeometry(offset);
+                offset.x += self._offset.x;
+                offset.y += self._offset.y;
+                offset.z += self._offset.z;
             });
 
             // Add new graphNode to the front, the front is what is displayed at
@@ -185,11 +190,27 @@ var Widgets = (function()
             this._widget.add(newGraphNode.getMesh());
 
             // Remove from back if the list size exceeds the max allowed depth
-            if (this._graphList.size() > this._depth) {
+            while (this._graphList.size() > this._depth) {
                 var removedNode = this._graphList.removeElementAtIndex(this._graphList.size() - 1);
                 this._widget.remove(removedNode.getMesh());
             }
         }
+    };
+    AnalyzerWidget.prototype.setDepth = function(depth)
+    {
+        this._depth = depth;
+    };
+    AnalyzerWidget.prototype.setOffsetX = function(offsetX)
+    {
+        this._offset.x = offsetX;
+    };
+    AnalyzerWidget.prototype.setOffsetY = function(offsetY)
+    {
+        this._offset.y = offsetY;
+    };
+    AnalyzerWidget.prototype.setOffsetZ = function(offsetZ)
+    {
+        this._offset.z = offsetZ;
     };
 
     return {

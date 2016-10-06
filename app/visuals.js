@@ -1,8 +1,11 @@
 var THREE = require('three');
+var Stats = require('stats-js');
 
 var Visuals = (function()
 {
     'use strict';
+
+    var _stats = new Stats();
 
     var _scene = new THREE.Scene();
     var _camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 5000 );
@@ -18,6 +21,11 @@ var Visuals = (function()
 
     var initialize = function()
     {
+        _stats.setMode(0);
+        _stats.domElement.style.position = 'absolute';
+        _stats.domElement.style.left = '0px';
+        _stats.domElement.style.top = '0px';
+
         _camera.position.z = 1000;
         _renderer.setSize(window.innerWidth, window.innerHeight);
     };
@@ -25,6 +33,10 @@ var Visuals = (function()
     var getRenderer = function()
     {
         return _renderer;
+    };
+    var getStats = function()
+    {
+        return _stats;
     };
 
     // initialize the timer variables and start the animation
@@ -49,6 +61,7 @@ var Visuals = (function()
 
         // if enough time has elapsed, draw the next frame
         if (_elapsed > _fpsInterval) {
+            _stats.begin();
             // Get ready for next frame by setting then=now, but also adjust for your
             // specified fpsInterval not being a multiple of RAF's interval (16.7ms)
             _then = _now - (_elapsed % _fpsInterval);
@@ -61,6 +74,7 @@ var Visuals = (function()
             }
 
             _renderer.render(_scene, _camera);
+            _stats.end();
         }
     };
 
@@ -110,6 +124,7 @@ var Visuals = (function()
     return {
         initialize: initialize,
         getRenderer: getRenderer,
+        getStats: getStats,
         startRender: startRender,
         load: load,
         loadWidget: loadWidget,
