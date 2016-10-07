@@ -11,7 +11,7 @@ function AnalyzerWidgetController(gui, analyzerWidget)
     this.depth = 1;
 
     var widgetFolder = gui.addFolder('WidgetName');
-    var depthControl = widgetFolder.add(this, 'depth', 1, 30).step(1);
+    var depthControl = widgetFolder.add(this, 'depth', 1, 50).step(1);
     var offsetXControl = widgetFolder.add(this, 'offsetX', -20, 20);
     var offsetYControl = widgetFolder.add(this, 'offsetY', -20, 20);
     var offsetZControl = widgetFolder.add(this, 'offsetZ', 0, 50);
@@ -41,17 +41,17 @@ window.onload = function()
 {
     window.addEventListener('keydown', keyDownEvent);
     window.addEventListener('keyup', keyUpEvent);
+    window.addEventListener('resize', Visuals.resizeCanvas, false);
 
     Visuals.initialize();
     document.body.appendChild(Visuals.getRenderer().domElement);
     document.body.appendChild(Visuals.getStats().domElement);
+    document.body.style.backgroundColor = 'black';
 
     var gui = new Dat.GUI();
 
-    //var sineWave440 = new Sounds.SineWave(440, 1);
-    var sineWave220 = new Sounds.SineWave(220, 1);
     /*
-    //sineWave440.play();
+    var sineWave220 = new Sounds.SineWave(220, 1);
     sineWave220.play();
     var sine220AnalyzerWidget = new Widgets.AnalyzerWidget(sineWave220.getAudioAnalyzer(), 0, -60, 0, 512, 40, 2);
     var sine220Controller = new AnalyzerWidgetController(gui, sine220AnalyzerWidget);
@@ -61,7 +61,11 @@ window.onload = function()
     sineFolder.add(sineWave220, 'pause');
     sineFolder.add(sineWave220, 'stop');
     sineFolder.open();
+
+    var widget = new Widgets.AudioBufferWidget(sineWave220, 0, -20, 0, 512, 10);
+    Visuals.loadWidget(widget);
     */
+
 
 
     /*
@@ -84,6 +88,7 @@ window.onload = function()
         var sfController = new AnalyzerWidgetController(gui, sfAnalyzerWidget);
         Visuals.loadWidget(sfAnalyzerWidget);
     });
+
 
     /*
     var poAudio = new Sounds.AudioDataWave('assets/sounds/passing_out.mp3');
@@ -120,10 +125,8 @@ window.onload = function()
         Visuals.loadWidget(edgyAnalyzerWidget);
     });
     */
-    var widget = new Widgets.AudioBufferWidget(sineWave220, 0, -20, 0, 512, 10);
 
     Visuals.load();
-    Visuals.loadWidget(widget);
     Visuals.startRender(60);
 };
 

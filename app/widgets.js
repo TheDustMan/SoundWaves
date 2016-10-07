@@ -90,6 +90,18 @@ var Widgets = (function()
         this._playhead.position.x = (this._audioBuffer.getCurrentTime() * this._width) / this._audioBuffer.getAudioBuffer().duration;
     };
 
+    var _computeVertexColors = function(dataArray)
+    {
+        // Analyze the data
+        for (var i = 0; i < dataArray.length; ++i) {
+
+        }
+
+        var vertexColors = [];
+        //var colorString = "rgb("+this._dataArray[i]+", "+this._dataArray[i]+", "+this._dataArray[i]+")";
+        //this._graphGeometry.colors[i] = new THREE.Color(colorString);
+    };
+
     function AnalyzerGraphNode(dataArray, position, width, height)
     {
         this._position = position;
@@ -105,17 +117,27 @@ var Widgets = (function()
         for (var i = 0; i < this._dataArray.length; ++i) {
             var translatedY = (this._height / 2) * (((this._dataArray[i] * 2) / 255) - 1);
             this._graphGeometry.vertices.push(new THREE.Vector3(this._position.x + i, yOffset + translatedY, this._position.z));
-            this._graphGeometry.colors[i] = new THREE.Color(0xffffff);
+            var colorString = "rgb("+this._dataArray[i]+", "+this._dataArray[i]+", "+this._dataArray[i]+")";
+            this._graphGeometry.colors[i] = new THREE.Color(colorString);
+            //this._graphGeometry.colors = _computeVertexColors(dataArray);
         }
         var lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff, opacity: 1.0, vertexColors: THREE.VertexColors});
         this._graphMesh = new THREE.Line(this._graphGeometry, lineMaterial);
     }
+
     AnalyzerGraphNode.prototype.constructor = AnalyzerGraphNode;
     AnalyzerGraphNode.prototype.updateGeometry = function(offsetVector)
     {
         if (offsetVector === null) {
             offsetVector = new THREE.Vector3(0, 0, 0);
         }
+        this._graphMesh.position.add(offsetVector);
+        /*
+        // This is commented out, but will remain to remind myself of
+        // what not to do in the future. I was trying to update each
+        // vertex of each mesh on every frame. Instead I can just
+        // update the position of the entire mesh (which updates all vertices
+        // it contains). This results in orders of magnitude better performance
         var yOffset = this._position.y + (this._height / 2);
         for (var i = 0; i < this._dataArray.length; ++i) {
             // This will convert it from a number between 0 and 255 to a number
@@ -130,6 +152,7 @@ var Widgets = (function()
         }
         this._graphGeometry.verticesNeedUpdate = true;
         this._graphGeometry.colorsNeedUpdate = true;
+        */
     };
     AnalyzerGraphNode.prototype.getDataArray = function()
     {
@@ -148,52 +171,29 @@ var Widgets = (function()
         this._graphList = new BUCKETS.LinkedList();
         this._analyzer = analyzer;
         this._analyzer.fftSize = width * 2;
-
-        // When the depth is one, we just create a single node and continuously update it
-        // instead of mainting the list of them
-        if (this._depth == 1) {
-            this._graphList.add(new AnalyzerGraphNode(new Uint8Array(this._analyzer.frequencyBinCount), new THREE.Vector3(x, y ,z), width, height), 0);
-            var classThis = this;
-            this._graphList.forEach(function(graphNode) {
-                classThis._widget.add(graphNode.getMesh());
-            });
-        }
     }
     AnalyzerWidget.prototype = Object.create(Widget.prototype);
     AnalyzerWidget.prototype.constructor = AnalyzerWidget;
     AnalyzerWidget.prototype.update = function()
     {
         var self = this;
-        if (this._depth == 1) {
-            // When only showing one graph node, don't bother adding and removing
-            // from the list, just update the one
-            this._graphList.forEach(function(graphNode) {
-                self._analyzer.getByteTimeDomainData(graphNode.getDataArray());
-                graphNode.updateGeometry(null);
-            });
-        } else {
-            // Move all current nodes by an offsetVector
-            var offset = new THREE.Vector3(0, 0, 0);
-            this._graphList.forEach(function(graphNode) {
-                graphNode.updateGeometry(offset);
-                offset.x += self._offset.x;
-                offset.y += self._offset.y;
-                offset.z += self._offset.z;
-            });
+        // Move all current nodes by the offsetVector
+        this._graphList.forEach(function(graphNode) {
+            graphNode.updateGeometry(self._offset);
+        });
 
-            // Add new graphNode to the front, the front is what is displayed at
-            // the widget's origin. All others will be added at some offset vector
-            var dataArray = new Uint8Array(this._analyzer.frequencyBinCount);
-            this._analyzer.getByteTimeDomainData(dataArray);
-            var newGraphNode = new AnalyzerGraphNode(dataArray, new THREE.Vector3(this._x, this._y , this._z), this._width, this._height);
-            this._graphList.add(newGraphNode, 0);
-            this._widget.add(newGraphNode.getMesh());
+        // Add new graphNode to the front, the front is what is displayed at
+        // the widget's origin. All others will be added at some offset vector
+        var dataArray = new Uint8Array(this._analyzer.frequencyBinCount);
+        this._analyzer.getByteTimeDomainData(dataArray);
+        var newGraphNode = new AnalyzerGraphNode(dataArray, new THREE.Vector3(this._x, this._y , this._z), this._width, this._height);
+        this._graphList.add(newGraphNode, 0);
+        this._widget.add(newGraphNode.getMesh());
 
-            // Remove from back if the list size exceeds the max allowed depth
-            while (this._graphList.size() > this._depth) {
-                var removedNode = this._graphList.removeElementAtIndex(this._graphList.size() - 1);
-                this._widget.remove(removedNode.getMesh());
-            }
+        // Remove from back if the list size exceeds the max allowed depth
+        while (this._graphList.size() > this._depth) {
+            var removedNode = this._graphList.removeElementAtIndex(this._graphList.size() - 1);
+            this._widget.remove(removedNode.getMesh());
         }
     };
     AnalyzerWidget.prototype.setDepth = function(depth)

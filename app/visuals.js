@@ -23,8 +23,8 @@ var Visuals = (function()
     {
         _stats.setMode(0);
         _stats.domElement.style.position = 'absolute';
-        _stats.domElement.style.left = '0px';
-        _stats.domElement.style.top = '0px';
+        _stats.domElement.style.left = '10px';
+        _stats.domElement.style.top = '10px';
 
         _camera.position.z = 1000;
         _renderer.setSize(window.innerWidth, window.innerHeight);
@@ -121,6 +121,15 @@ var Visuals = (function()
         _cameraYSpeed = ySpeed;
     };
 
+    var resizeCanvas = function(e)
+    {
+        console.log('resized!');
+        _camera.aspect = window.innerWidth / window.innerHeight;
+        _camera.updateProjectionMatrix();
+
+        _renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+
     return {
         initialize: initialize,
         getRenderer: getRenderer,
@@ -131,6 +140,7 @@ var Visuals = (function()
         setCameraZoomSpeed: setCameraZoomSpeed,
         setCameraXSpeed: setCameraXSpeed,
         setCameraYSpeed: setCameraYSpeed,
+        resizeCanvas: resizeCanvas
     };
 })();
 
