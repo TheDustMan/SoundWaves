@@ -9,12 +9,16 @@ function AnalyzerWidgetController(gui, analyzerWidget)
     this.offsetY = 0;
     this.offsetZ = 0;
     this.depth = 1;
+    this.enableColor = false;
+    this.colorScaleLimit = 5;
 
     var widgetFolder = gui.addFolder('WidgetName');
     var depthControl = widgetFolder.add(this, 'depth', 1, 50).step(1);
     var offsetXControl = widgetFolder.add(this, 'offsetX', -20, 20);
     var offsetYControl = widgetFolder.add(this, 'offsetY', -20, 20);
     var offsetZControl = widgetFolder.add(this, 'offsetZ', 0, 50);
+    var colorEnableControl = widgetFolder.add(this, 'enableColor', false);
+    var colorScaleLimitControl = widgetFolder.add(this, 'colorScaleLimit', 1, 10);
     widgetFolder.open();
 
     depthControl.onChange(function(depth)
@@ -33,6 +37,14 @@ function AnalyzerWidgetController(gui, analyzerWidget)
     {
         analyzerWidget.setOffsetZ(offsetZ);
     });
+    colorEnableControl.onChange(function(enabled)
+    {
+        Widgets.setColorEnabled(enabled);
+    });
+    colorScaleLimitControl.onChange(function(colorScaleLimit)
+    {
+        Widgets.setColorScaleLimit(colorScaleLimit);
+    });
 }
 AnalyzerWidgetController.prototype.constructor = AnalyzerWidgetController;
 
@@ -50,7 +62,7 @@ window.onload = function()
 
     var gui = new Dat.GUI();
 
-    /*
+/*
     var sineWave220 = new Sounds.SineWave(220, 1);
     sineWave220.play();
     var sine220AnalyzerWidget = new Widgets.AnalyzerWidget(sineWave220.getAudioAnalyzer(), 0, -60, 0, 512, 40, 2);
@@ -66,17 +78,6 @@ window.onload = function()
     Visuals.loadWidget(widget);
     */
 
-
-
-    /*
-    var ffAudio = new Sounds.AudioDataWave('assets/sounds/Final_Fantasy.ogg');
-    ffAudio.load().then(function() {
-        ffAudio.play();
-        var ffAudioWidget = new Widgets.AudioBufferWidget(ffAudio, 0, -40, 0, 512, 10);
-        Visuals.loadWidget(ffAudioWidget);
-    });
-    */
-
     var sfAudio = new Sounds.AudioDataWave('assets/sounds/super_freak.mp3');
     sfAudio.load().then(function() {
         var sfFolder = gui.addFolder('super_freak.mp3');
@@ -89,7 +90,14 @@ window.onload = function()
         Visuals.loadWidget(sfAnalyzerWidget);
     });
 
-
+    /*
+    var ffAudio = new Sounds.AudioDataWave('assets/sounds/Final_Fantasy.ogg');
+    ffAudio.load().then(function() {
+        ffAudio.play();
+        var ffAudioWidget = new Widgets.AudioBufferWidget(ffAudio, 0, -40, 0, 512, 10);
+        Visuals.loadWidget(ffAudioWidget);
+    });
+    */
     /*
     var poAudio = new Sounds.AudioDataWave('assets/sounds/passing_out.mp3');
     poAudio.load().then(function() {

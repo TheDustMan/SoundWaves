@@ -7,6 +7,17 @@ var Widgets = (function()
 {
     'use strict';
 
+    var _colorEnabled = false;
+    var _colorScaleLimit = 5;
+    var setColorScaleLimit = function(colorScaleLimit)
+    {
+        _colorScaleLimit = colorScaleLimit;
+    };
+    var setColorEnabled = function(enabled)
+    {
+        _colorEnabled = enabled;
+    };
+
     function Widget(x, y, z, width, height)
     {
         this._x = x;
@@ -90,16 +101,120 @@ var Widgets = (function()
         this._playhead.position.x = (this._audioBuffer.getCurrentTime() * this._width) / this._audioBuffer.getAudioBuffer().duration;
     };
 
-    var _computeVertexColors = function(dataArray)
+    var _wavelengthToColor = function(waveLength, scaleLimit)
+    {
+        //visible spectrum: 380 - 750 = range of 370
+        //violet	380–425 nm: 45/370 = .12
+        //indigo    425-450 nm: 25/370 = .07
+        //blue	    450–495 nm: 45/370 = .12
+        //green  	495–570 nm: 75/370 = .20
+        //yellow	570–590 nm: 20/370 = .05
+        //orange	590–620 nm: 30/370 = .08
+        //red	    620–750 nm: 130/370 = .35
+        var violetRange = 45;
+        var indigoRange = 25;
+        var blueRange = 45;
+        var greenRange = 75;
+        var yellowRange = 20;
+        var orangeRange = 30;
+        var redRange = 130;
+
+        var violetRangeFactor = 0.12;
+        var indigoRangeLimit = 0.07;
+        var blueRangeFactor = 0.12;
+        var greenRangeFactor = 0.20;
+        var yellowRangeFactor = 0.05;
+        var orangeRangeFactor = 0.08;
+        var redRangeFactor = 0.35;
+
+        var white = new THREE.Color('rgb(255,255,255)');
+        var violet = new THREE.Color('rgb(148,0,111)');
+        var indigo = new THREE.Color('rgb(75,0,130)');
+        var blue = new THREE.Color('rgb(0,0,255)');
+        var green = new THREE.Color('rgb(0,255,0)');
+        var yellow = new THREE.Color('rgb(255,255,0)');
+        var orange = new THREE.Color('rgb(255,127,0)');
+        var red = new THREE.Color('rgb(255,0,0)');
+
+
+        var violetLimit = scaleLimit * violetRangeFactor;
+        var indigoLimit = (scaleLimit * indigoRangeLimit) + violetLimit;
+        var blueLimit = (scaleLimit * blueRangeFactor) + indigoLimit;
+        var greenLimit = (scaleLimit * greenRangeFactor) + blueLimit;
+        var yellowLimit = (scaleLimit * yellowRangeFactor) + greenLimit;
+        var orangeLimit = (scaleLimit * orangeRangeFactor) + yellowLimit;
+        var redLimit = (scaleLimit * redRangeFactor) + orangeLimit;
+
+        if (waveLength < violetLimit) {
+            return white.lerp(violet, waveLength / violetLimit);
+        } else if (waveLength < indigoLimit) {
+            return violet.lerp(indigo, (waveLength - violetLimit) / indigoRange);
+        } else if (waveLength < blueLimit) {
+            return indigo.lerp(blue, (waveLength - indigoLimit) / blueRange);
+        } else if (waveLength < greenLimit) {
+            return blue.lerp(green, (waveLength - blueLimit) / greenRange);
+        } else if (waveLength < yellowLimit) {
+            return green.lerp(yellow, (waveLength - greenLimit) / yellowRange);
+        } else if (waveLength < orangeLimit) {
+            return yellow.lerp(orange, (waveLength - yellowLimit) / orangeRange);
+        } else if (waveLength < redLimit) {
+            return orange.lerp(red, (waveLength - orangeLimit) / redRange);
+        } else {
+            return red.lerp(white, (waveLength - redLimit) / (redLimit + 100));
+        }
+    };
+
+    var _colorByWavelength = function(dataArray)
     {
         // Analyze the data
-        for (var i = 0; i < dataArray.length; ++i) {
-
+        var directionalChanges = 0;
+        var trend = dataArray[0] >= 128 ? 1 : -1;
+        for (var i = 1; i < dataArray.length; ++i) {
+            if (dataArray[i] > dataArray[i - 1] && trend < 0) {
+                ++directionalChanges;
+                trend = 1;
+            } else if (dataArray[i] < dataArray[i - 1] && trend > 0) {
+                ++directionalChanges;
+                trend = -1;
+            }
         }
+        console.log('Directional Changes: ' + directionalChanges);
+        // Divide the length of the dataset by number of directional changes to
+        // get a rough estimate of the average wavelength contained in the dataset
+        var wavelength = directionalChanges === 0 ? dataArray.length : dataArray.length / directionalChanges;
+        console.log('Wavelength: ' + wavelength);
 
-        var vertexColors = [];
+        // Convert the computed wvelength to a color
+        return _wavelengthToColor(wavelength, _colorScaleLimit);
+
         //var colorString = "rgb("+this._dataArray[i]+", "+this._dataArray[i]+", "+this._dataArray[i]+")";
         //this._graphGeometry.colors[i] = new THREE.Color(colorString);
+    };
+
+    var _colorByAmplitude = function(dataArray)
+    {
+        //var runningAmplitudeTotal = 0;
+        var maxAmplitude = 0;
+        for (var i = 0; i < dataArray.length; ++i) {
+            var currentAmplitude = Math.abs(dataArray[i] - 128);
+            if (currentAmplitude > maxAmplitude) {
+                maxAmplitude = currentAmplitude;
+            }
+        }
+        //var amplitudeAverage = runningAmplitudeTotal / dataArray.length;
+        console.log('Max Amplitude: ' + maxAmplitude);
+        return 'rgb(255,255,255)';
+    };
+
+    var _computeVertexColors = function(dataArray)
+    {
+        return _colorByWavelength(dataArray);
+        //return _colorByAmplitude(dataArray);
+    };
+
+    var _uint8ToFloat = function(uint8)
+    {
+        return (2 * (uint8 / 255)) - 1;
     };
 
     function AnalyzerGraphNode(dataArray, position, width, height)
@@ -117,11 +232,12 @@ var Widgets = (function()
         for (var i = 0; i < this._dataArray.length; ++i) {
             var translatedY = (this._height / 2) * (((this._dataArray[i] * 2) / 255) - 1);
             this._graphGeometry.vertices.push(new THREE.Vector3(this._position.x + i, yOffset + translatedY, this._position.z));
-            var colorString = "rgb("+this._dataArray[i]+", "+this._dataArray[i]+", "+this._dataArray[i]+")";
-            this._graphGeometry.colors[i] = new THREE.Color(colorString);
-            //this._graphGeometry.colors = _computeVertexColors(dataArray);
+            //var colorString = "rgb("+this._dataArray[i]+", "+this._dataArray[i]+", "+this._dataArray[i]+")";
+            //this._graphGeometry.colors[i] = new THREE.Color(colorString);
         }
-        var lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff, opacity: 1.0, vertexColors: THREE.VertexColors});
+        var lineColor = _colorEnabled ? _computeVertexColors(dataArray) : 'rgb(255,255,255)';
+        //var lineMaterial = new THREE.LineBasicMaterial({color: 0xffffff, opacity: 1.0, vertexColors: THREE.VertexColors});
+        var lineMaterial = new THREE.LineBasicMaterial({color: lineColor, lineWidth: 5, opacity: 1.0 });
         this._graphMesh = new THREE.Line(this._graphGeometry, lineMaterial);
     }
 
@@ -212,10 +328,16 @@ var Widgets = (function()
     {
         this._offset.z = offsetZ;
     };
+    AnalyzerWidget.prototype.setColorScaleLimit = function(colorScaleLimit)
+    {
+        this._colorScaleLimit = colorScaleLimit;
+    };
 
     return {
         AudioBufferWidget: AudioBufferWidget,
-        AnalyzerWidget: AnalyzerWidget
+        AnalyzerWidget: AnalyzerWidget,
+        setColorScaleLimit: setColorScaleLimit,
+        setColorEnabled: setColorEnabled
     };
 })();
 
