@@ -6,7 +6,7 @@ module.exports = function(grunt) {
         secret: grunt.file.readJSON('credentials.json'),
         environments: {
             options: {
-                current_symlink: 'current',
+                current_symlink: 'SoundWaves',
                 local_path: 'product'
             },
             staging: {
@@ -15,7 +15,7 @@ module.exports = function(grunt) {
                     username: '<%= secret.credentials.username %>',
                     password: '<%= secret.credentials.password %>',
                     port: '<%= secret.credentials.port %>',
-                    deploy_path: '/home/dustman/dustweb.org/javascript/projects/SoundWaves/staging',
+                    deploy_path: '/home/dustman/dustweb.org/javascript/projects',
                     debug: true,
                     release_to_keep: '5'
                 }
@@ -26,7 +26,7 @@ module.exports = function(grunt) {
                     username: '<%= secret.credentials.username %>',
                     password: '<%= secret.credentials.password %>',
                     port: '<%= secret.credentials.port %>',
-                    deploy_path: '/home/dustman/dustweb.org/javascript/projects/SoundWaves/production',
+                    deploy_path: '/home/dustman/dustweb.org/javascript/projects',
                     release_to_keep: '5'
                 }
             }
