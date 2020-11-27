@@ -1,4 +1,6 @@
-This repository can be used as a starting point for any javascript project.
+# SoundWaves
+
+A wep app for visualizing sound waves of some songs.
 
 ### Prerequisites:
 • Have npm installed  
